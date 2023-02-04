@@ -29,24 +29,20 @@ M.tldr = function()
 		-- * load a list of types and files from a config..
 		-- * render buffer as markdown
 		-- * add some function or command to automatically add new tldr docs..
+		-- * add a backup mechanism to finding type (tree-sitter?)
 
 		if not type then
+			P(type)
 			print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. first_line)
 			return
 		end
 
 		if type == "list" or type == "array" then
-			print("[" .. filetype .. "] opening array tldr..")
 			file = "array"
 		elseif type == "dict" then
-			print("[" .. filetype .. "] opening dict tldr..")
 			file = "dict"
 		elseif type == "string" or type == "Literal" or type == "str" then
-			print("[" .. filetype .. "] opening string tldr..")
 			file = "string"
-		else
-			P(type)
-			print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. first_line)
 		end
 
 		local info = debug.getinfo(1, "S")
