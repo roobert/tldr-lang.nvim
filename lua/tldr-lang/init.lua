@@ -1,67 +1,65 @@
-local api = vim.api
-local ts = require("nvim-treesitter")
-
 local M = {}
 
-M.get_node = function()
-	local bufnr = api.nvim_get_current_buf()
-	local cursor = api.nvim_win_get_cursor(0)
-	local parser = vim.treesitter.get_parser(bufnr)
+M.tldr = function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local cursor = vim.api.nvim_win_get_cursor(0)
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
+	local filetype = vim.bo.filetype
 
-	-- FIXME: - this +1 stuff..
-	local row, col = cursor[1], cursor[2] + 1
+	local params = {
+		textDocument = { uri = bufname },
+		position = { line = cursor[1] - 1, character = cursor[2] },
+	}
 
-	local ret
+	vim.lsp.buf_request(bufnr, "textDocument/hover", params, function(err, result, _, _)
+		if err then
+			error(tostring(err))
+		end
 
-	parser:for_each_tree(function(tree)
-		if ret then
+		if not result then
 			return
 		end
 
-		local root = tree:root()
+		local doc = string.match(result.contents.value, "```(.*)```")
+		local first_line = string.match(doc, "%w*\n(.*)\n")
+		local type_components = vim.split(first_line, " ")
+		local type = string.match(type_components[3], "(%w*)")
 
-		if root then
-			local node = root:descendant_for_range(row - 1, col - 1, row - 1, col - 1)
+		-- TODO:
+		-- * search for the doc based on kind and lang
+		-- * load a list of kinds and files from a config..
+		-- * open the tldr doc in a split or preview-window
+		-- * render buffer as markdown
+		-- * add some function or command to automatically add new tldr docs..
 
-			if node and node ~= root then
-				ret = node
-			end
+		if type == "list" or type == "array" then
+			print("[" .. filetype .. "] opening array tldr..")
+		elseif type == "dict" then
+			print("[" .. filetype .. "] opening dict tldr..")
+		elseif type == "string" or type == "Literal" or type == "str" then
+			print("[" .. filetype .. "] opening string tldr..")
+		else
+			P(type)
+			print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. first_line)
 		end
+
+		-- local cmd = string.format("tldr %s", typ)
+		-- vim.cmd(cmd)
+
+		-- use this or split..
+		--vim.cmd("ped")
 	end)
-
-	if not ret then
-		return nil, nil
-	end
-
-	local kind = ret:type()
-	local typ = ret:symbol()
-
-	print(kind, typ)
-
-	if kind == "identifier" then
-		typ = "fn"
-	end
-
-	return kind, typ
 end
 
-M.tldr = function()
-	local kind, typ = M.get_node()
-
-	if not kind then
-		return
-	end
-
-	local cmd = string.format("tldr %s", typ)
-
-	vim.cmd(cmd)
-
-	-- FIXME:
-	-- * search for the doc based on type of thing?
-	-- * open the tldr doc in a buffer
-	-- * render buffer as markdown
+M.setup = function()
+	-- TODO:
+	-- allow custom keymap..
+	vim.api.nvim_set_keymap(
+		"n",
+		"<leader>t",
+		'<CMD>lua require("tldr-lang").tldr()<CR>',
+		{ noremap = true, silent = true }
+	)
 end
-
-M.setup = function() end
 
 return M
