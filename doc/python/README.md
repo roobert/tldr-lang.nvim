@@ -3,17 +3,12 @@ prompts:
 
 # Overview
 
-Give me the tldr for `<topic>` methods.
-
+Show me the tldr for using python `<topic>`.
 
 # Methods
 
-Show me the tldr for using python `<topic>`.
+Give me the tldr for python methods for `<topic>`.
 
 # Examples
 
-Show me example code blocks using `<topic>`.
-
-
-
-
+Show me example code blocks using python `<topic>`.
