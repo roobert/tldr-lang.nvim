@@ -26,9 +26,7 @@ M.tldr = function()
 		local type = string.match(type_components[3], "(%w*)")
 
 		-- TODO:
-		-- * search for the doc based on kind and lang
-		-- * load a list of kinds and files from a config..
-		-- * open the tldr doc in a split or preview-window
+		-- * load a list of types and files from a config..
 		-- * render buffer as markdown
 		-- * add some function or command to automatically add new tldr docs..
 
@@ -55,10 +53,8 @@ M.tldr = function()
 		local script_path = info.source:sub(2)
 		local plugin_dir = script_path:match("(.*/)")
 
-		--print("split " .. plugin_dir .. "../../doc/" .. filetype .. "/" .. file .. ".md")
+		-- should this be a previw-window?
 		vim.api.nvim_command("split " .. plugin_dir .. "../../doc/" .. filetype .. "/" .. file .. ".md")
-
-		-- split +/Users/rw/.config/nvim/lua/tldr-lang/doc/python/.md
 
 		-- local win_id = vim.api.nvim_get_current_win()
 		-- local buf_id = vim.api.nvim_get_current_buf()
