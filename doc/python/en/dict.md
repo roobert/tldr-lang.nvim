@@ -27,7 +27,7 @@ Note: Keys in dictionaries must be unique and hashable (e.g., integers, strings,
 
 # Examples
 
-```
+``` python
 # Creating a dictionary
 dict = {'key1': 'value1', 'key2': 'value2'}
 
