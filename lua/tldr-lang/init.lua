@@ -2,13 +2,10 @@ local M = {}
 
 local config = require("tldr-lang.config")
 
-M.status = ""
-
 -- TODO:
 -- * load a list of types and files from a config..
 -- * render buffer as markdown
 -- * add some function or command to automatically add new tldr docs..
--- * add a backup mechanism to finding type (tree-sitter?)
 M.tldr = function()
 	local filetype = vim.bo.filetype
 
