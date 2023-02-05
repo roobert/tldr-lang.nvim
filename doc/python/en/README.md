@@ -1,14 +1,7 @@
 All the documents in this directory are generated using ChatGPT with the following
-prompts:
+prompt:
 
-# Overview
-
-Show me the tldr for using python `<topic>`.
-
-# Methods
-
-Give me the tldr for python methods for `<topic>`.
-
-# Examples
-
-Show me example code blocks using python `<topic>`.
+```
+export TOPIC="topic"
+echo "give me the tldr for python ${TOPIC}, then give me the tldr for ${TOPIC} methods, then give me a code block showing examples of ${TOPIC} use"
+```
