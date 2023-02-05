@@ -1,1 +1,1 @@
-# tldr-lang.nvim
+# 🧭 tldr-lang.nvim
