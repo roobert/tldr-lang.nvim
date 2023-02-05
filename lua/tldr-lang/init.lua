@@ -21,6 +21,8 @@ M.tldr = function()
 		type = "list"
 	elseif treesitter_node_type == "dictionary" or treesitter_node_type == "{" or treesitter_node_type == "}" then
 		type = "dict"
+	elseif treesitter_node_type == "tuple" or treesitter_node_type == "(" or treesitter_node_type == ")" then
+		type = "tuple"
 	else
 		-- if not a value, for references, use lsp kind
 		type = lsp_node_kind
@@ -31,12 +33,15 @@ M.tldr = function()
 		return
 	end
 
+	-- python mappings..
 	if type == "list" or type == "array" then
-		file = "array"
+		file = "list"
 	elseif type == "dict" then
 		file = "dict"
 	elseif type == "string" or type == "Literal" or type == "str" then
 		file = "string"
+	elseif type == "Pattern" then
+		file = "regex"
 	else
 		print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. type)
 		return
