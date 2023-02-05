@@ -2,89 +2,86 @@ local M = {}
 
 local config = require("tldr-lang.config")
 
+M.status = ""
+
+-- TODO:
+-- * load a list of types and files from a config..
+-- * render buffer as markdown
+-- * add some function or command to automatically add new tldr docs..
+-- * add a backup mechanism to finding type (tree-sitter?)
 M.tldr = function()
-	local bufnr = vim.api.nvim_get_current_buf()
-	local cursor = vim.api.nvim_win_get_cursor(0)
-	local bufname = vim.api.nvim_buf_get_name(bufnr)
 	local filetype = vim.bo.filetype
 
-	local params = {
-		textDocument = { uri = bufname },
-		position = { line = cursor[1] - 1, character = cursor[2] },
-	}
+	local lsp_node_kind, lsp_node_type, treesitter_node_type = require("node-type").get()
 
-	vim.lsp.buf_request(bufnr, "textDocument/hover", params, function(err, result, _, _)
-		if err then
-			error(tostring(err))
-		end
+	local info = require("node-type").statusline()
 
-		if not result then
-			return
-		end
+	-- for values, see if treesitter lookup matches a known type..
+	local type
+	if treesitter_node_type == "string" or treesitter_node_type == '"' then
+		type = "string"
+	elseif treesitter_node_type == "list" or treesitter_node_type == "[" or treesitter_node_type == "]" then
+		type = "list"
+	elseif treesitter_node_type == "dictionary" or treesitter_node_type == "{" or treesitter_node_type == "}" then
+		type = "dict"
+	else
+		-- if not a value, for references, use lsp kind
+		type = lsp_node_kind
+	end
 
-		local doc = string.match(result.contents.value, "```(.*)```")
-		local first_line = string.match(doc, "%w*\n(.*)\n")
-		local type_components = vim.split(first_line, " ")
-		local type = string.match(type_components[3], "(%w*)")
+	if not type then
+		print("[" .. filetype .. "] failed opening tldr-lang for unknown type: " .. info)
+		return
+	end
 
-		-- TODO:
-		-- * load a list of types and files from a config..
-		-- * render buffer as markdown
-		-- * add some function or command to automatically add new tldr docs..
-		-- * add a backup mechanism to finding type (tree-sitter?)
+	if type == "list" or type == "array" then
+		file = "array"
+	elseif type == "dict" then
+		file = "dict"
+	elseif type == "string" or type == "Literal" or type == "str" then
+		file = "string"
+	else
+		print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. type)
+		return
+	end
 
-		if not type then
-			P(type)
-			print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. first_line)
-			return
-		end
+	print(
+		"[tldr-lang] attempting to open: "
+			.. filetype
+			.. "/"
+			.. type
+			.. "/"
+			.. config.options["language"]
+			.. "/"
+			.. file
+	)
 
-		if type == "list" or type == "array" then
-			file = "array"
-		elseif type == "dict" then
-			file = "dict"
-		elseif type == "string" or type == "Literal" or type == "str" then
-			file = "string"
-		else
-			print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. type .. " / " .. first_line)
-			return
-		end
+	local plugin_info = debug.getinfo(1, "S")
+	local script_path = plugin_info.source:sub(2)
+	local plugin_dir = script_path:match("(.*/)")
 
-		local info = debug.getinfo(1, "S")
-		local script_path = info.source:sub(2)
-		local plugin_dir = script_path:match("(.*/)")
+	-- should this be a previw-window?
+	vim.api.nvim_command(
+		"split " .. plugin_dir .. "../../doc/" .. filetype .. "/" .. config.options["language"] .. "/" .. file .. ".md"
+	)
 
-		-- should this be a previw-window?
-		vim.api.nvim_command(
-			"split "
-				.. plugin_dir
-				.. "../../doc/"
-				.. filetype
-				.. "/"
-				.. config.options["language"]
-				.. "/"
-				.. file
-				.. ".md"
-		)
+	-- -- local win_id = vim.api.nvim_get_current_win()
+	-- -- local buf_id = vim.api.nvim_get_current_buf()
 
-		-- local win_id = vim.api.nvim_get_current_win()
-		-- local buf_id = vim.api.nvim_get_current_buf()
+	-- -- vim.api.nvim_buf_set_name(buf_id, "TLDR-Lang")
+	-- -- vim.api.nvim_set_option_value("wrap", false, { win = win_id })
+	-- -- vim.api.nvim_set_option_value("cursorline", false, { win = win_id })
+	-- -- vim.api.nvim_set_option_value("number", false, { win = win_id })
+	-- -- vim.api.nvim_set_option_value("relativenumber", false, { win = win_id })
 
-		-- vim.api.nvim_buf_set_name(buf_id, "TLDR-Lang")
-		-- vim.api.nvim_set_option_value("wrap", false, { win = win_id })
-		-- vim.api.nvim_set_option_value("cursorline", false, { win = win_id })
-		-- vim.api.nvim_set_option_value("number", false, { win = win_id })
-		-- vim.api.nvim_set_option_value("relativenumber", false, { win = win_id })
-
-		-- vim.api.nvim_set_option_value("buftype", "nofile", { buf = buf_id })
-		-- vim.api.nvim_set_option_value("swapfile", false, { buf = buf_id })
-		-- vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf_id })
-		-- vim.api.nvim_set_option_value("filetype", "nvim-search-replace", { buf = buf_id })
-		-- vim.api.nvim_set_option_value("modifiable", false, { buf = buf_id })
-	end)
+	-- -- vim.api.nvim_set_option_value("buftype", "nofile", { buf = buf_id })
+	-- -- vim.api.nvim_set_option_value("swapfile", false, { buf = buf_id })
+	-- -- vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf_id })
+	-- -- vim.api.nvim_set_option_value("filetype", "nvim-search-replace", { buf = buf_id })
+	-- -- vim.api.nvim_set_option_value("modifiable", false, { buf = buf_id })
 end
 
-M.setup = function()
+M.setup = function(options)
 	if options == nil then
 		options = {}
 	end
