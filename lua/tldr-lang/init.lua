@@ -1,5 +1,7 @@
 local M = {}
 
+local config = require("tldr-lang.config")
+
 M.tldr = function()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local cursor = vim.api.nvim_win_get_cursor(0)
@@ -43,6 +45,9 @@ M.tldr = function()
 			file = "dict"
 		elseif type == "string" or type == "Literal" or type == "str" then
 			file = "string"
+		else
+			print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. type .. " / " .. first_line)
+			return
 		end
 
 		local info = debug.getinfo(1, "S")
@@ -50,7 +55,17 @@ M.tldr = function()
 		local plugin_dir = script_path:match("(.*/)")
 
 		-- should this be a previw-window?
-		vim.api.nvim_command("split " .. plugin_dir .. "../../doc/" .. filetype .. "/" .. file .. ".md")
+		vim.api.nvim_command(
+			"split "
+				.. plugin_dir
+				.. "../../doc/"
+				.. filetype
+				.. "/"
+				.. config.options["language"]
+				.. "/"
+				.. file
+				.. ".md"
+		)
 
 		-- local win_id = vim.api.nvim_get_current_win()
 		-- local buf_id = vim.api.nvim_get_current_buf()
@@ -70,8 +85,19 @@ M.tldr = function()
 end
 
 M.setup = function()
+	if options == nil then
+		options = {}
+	end
+
+	-- merge user supplied options with defaults..
+	for k, v in pairs(options) do
+		config.options[k] = v
+	end
+
 	-- TODO:
-	-- allow custom keymap..
+	-- * allow custom keymap..
+	-- * add binding to open index type thing?
+	-- * add binding to generate new tldr docs?
 	vim.api.nvim_set_keymap(
 		"n",
 		"<leader>t",
