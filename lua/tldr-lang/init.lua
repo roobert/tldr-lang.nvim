@@ -42,6 +42,8 @@ M.tldr = function()
 		file = "string"
 	elseif type == "Pattern" then
 		file = "regex"
+	elseif type == "tuple" then
+		file = "tuple"
 	else
 		print("[" .. filetype .. "] failed opening tldr-lang for unknown: " .. type)
 		return
